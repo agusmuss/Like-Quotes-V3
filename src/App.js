@@ -1,23 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import "./App.css";
+import QuoteCard from "./components/QuoteCard";
+import { quotes as initialQuotes } from "./quotes";
 
 function App() {
+  const [quotes, setQuotes] = useState(initialQuotes);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+
+  const handleNextQuote = () => {
+    setCurrentQuoteIndex((prev) => (prev + 1) % quotes.length);
+  };
+
+  const handleLike = () => {
+    setQuotes((prevQuotes) =>
+      prevQuotes.map((quote, index) =>
+        index === currentQuoteIndex
+          ? { ...quote, likeCount: quote.likeCount + 1 }
+          : quote
+      )
+    );
+  };
+
+  const currentQuote = quotes[currentQuoteIndex];
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <QuoteCard
+        quote={currentQuote.quote}
+        author={currentQuote.author}
+        likeCount={currentQuote.likeCount}
+        onLike={handleLike}
+        onNext={handleNextQuote}
+      />
     </div>
   );
 }
