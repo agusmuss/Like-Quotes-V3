@@ -1,37 +1,40 @@
-import { useState } from "react";
-import "./App.css";
-import QuoteCard from "./components/QuoteCard";
-import { quotes as initialQuotes } from "./quotes";
+import { Link, Route, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import AuthPage from "./pages/AuthPage";
 
 function App() {
-  const [quotes, setQuotes] = useState(initialQuotes);
-  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
-
-  const handleNextQuote = () => {
-    setCurrentQuoteIndex((prev) => (prev + 1) % quotes.length);
-  };
-
-  const handleLike = () => {
-    setQuotes((prevQuotes) =>
-      prevQuotes.map((quote, index) =>
-        index === currentQuoteIndex
-          ? { ...quote, likeCount: quote.likeCount + 1 }
-          : quote
-      )
-    );
-  };
-
-  const currentQuote = quotes[currentQuoteIndex];
-
   return (
-    <div className="app">
-      <QuoteCard
-        quote={currentQuote.quote}
-        author={currentQuote.author}
-        likeCount={currentQuote.likeCount}
-        onLike={handleLike}
-        onNext={handleNextQuote}
-      />
+    <div className="min-h-screen">
+      <header className="border-b border-slate-200/80 bg-white/70 backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/70">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+          <Link
+            to="/"
+            className="text-lg font-semibold text-slate-900 transition hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-100 dark:hover:text-white"
+          >
+            Random Quotes
+          </Link>
+          <nav className="flex items-center gap-4 text-sm font-medium">
+            <Link
+              to="/"
+              className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+            >
+              Home
+            </Link>
+            <Link
+              to="/auth"
+              className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+            >
+              Login / Sign Up
+            </Link>
+          </nav>
+        </div>
+      </header>
+      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth" element={<AuthPage />} />
+        </Routes>
+      </main>
     </div>
   );
 }
