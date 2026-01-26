@@ -21,7 +21,7 @@ export function Title({ label, align }) {
 
   return (
     <h2
-      className={	ext-2xl font-semibold leading-snug text-slate-900 dark:text-slate-100 }
+      className={`text-2xl font-semibold leading-snug text-slate-900 dark:text-slate-100 ${alignText()}`}
     >
       {label}
     </h2>
