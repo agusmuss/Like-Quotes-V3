@@ -2,9 +2,16 @@ export const align = {
   center: "center",
   left: "left",
   right: "right",
+} as const;
+
+export type Align = (typeof align)[keyof typeof align];
+
+type TitleProps = {
+  label: string;
+  align: Align;
 };
 
-export function Title({ label, align }) {
+export function Title({ label, align }: TitleProps) {
   const alignText = () => {
     switch (align) {
       case "center":

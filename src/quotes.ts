@@ -1,4 +1,10 @@
-export const quotes = [
+export type Quote = {
+  quote: string;
+  author: string;
+  likeCount: number;
+};
+
+export const quotes: Quote[] = [
   {
     quote: "Be yourself; everyone else is already taken.",
     author: "Oscar Wilde",

@@ -24,7 +24,7 @@ const getInitialTheme = () => {
 };
 
 function App() {
-  const [isDark, setIsDark] = useState(getInitialTheme);
+  const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
