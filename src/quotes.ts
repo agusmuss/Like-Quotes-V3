@@ -4,6 +4,7 @@ export type Quote = {
   author: string;
   likeCount: number;
   createdBy?: string;
+  validated?: boolean;
 };
 
 export type QuoteInput = {

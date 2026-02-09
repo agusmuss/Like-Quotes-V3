@@ -13,13 +13,21 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  onSnapshot,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
+export type UserProfile = {
+  email: string;
+  themePreference?: string;
+  isAdmin?: boolean;
+};
+
 type AuthContextValue = {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   register: (email: string, password: string) => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
@@ -41,6 +49,7 @@ const ensureUserDocument = async (currentUser: User) => {
     await setDoc(userRef, {
       email: currentUser.email ?? "",
       themePreference: "light",
+      isAdmin: false,
       createdAt: serverTimestamp(),
     });
   }
@@ -48,6 +57,7 @@ const ensureUserDocument = async (currentUser: User) => {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,6 +71,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setUserProfile(null);
+      return;
+    }
+
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUserProfile(snapshot.data() as UserProfile);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const register = async (email: string, password: string) => {
     const credential = await createUserWithEmailAndPassword(
@@ -103,6 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value = useMemo(
     () => ({
       user,
+      userProfile,
       loading,
       register,
       login,
@@ -110,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updateUserEmail,
       deleteAccount,
     }),
-    [user, loading]
+    [user, userProfile, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

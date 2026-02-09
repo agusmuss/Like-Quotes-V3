@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -11,21 +9,17 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
+import { Link } from "react-router-dom";
 import QuoteCard from "../components/QuoteCard";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import type { Quote } from "../quotes";
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Something went wrong. Please try again.";
-};
-
 type QuoteRecord = Quote & {
   createdBy?: string;
+  validated?: boolean;
 };
 
 export default function HomePage() {
@@ -34,15 +28,11 @@ export default function HomePage() {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [newQuote, setNewQuote] = useState("");
-  const [newAuthor, setNewAuthor] = useState("");
-  const [addError, setAddError] = useState("");
-  const [addSuccess, setAddSuccess] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     const quotesQuery = query(
       collection(db, "quotes"),
+      where("validated", "==", true),
       orderBy("createdAt", "desc")
     );
 
@@ -57,6 +47,7 @@ export default function HomePage() {
             author: data.author ?? "Unknown",
             likeCount: data.likeCount ?? 0,
             createdBy: data.createdBy,
+            validated: Boolean(data.validated),
           };
         });
         setQuotes(data);
@@ -121,43 +112,6 @@ export default function HomePage() {
     await deleteDoc(doc(db, "quotes", currentQuote.id));
   };
 
-  const handleAddQuote = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setAddError("");
-    setAddSuccess("");
-
-    if (!user) {
-      setAddError("Please sign in to add a quote.");
-      return;
-    }
-
-    const trimmedQuote = newQuote.trim();
-    const trimmedAuthor = newAuthor.trim();
-
-    if (!trimmedQuote || !trimmedAuthor) {
-      setAddError("Please fill in both the quote and author.");
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      await addDoc(collection(db, "quotes"), {
-        quote: trimmedQuote,
-        author: trimmedAuthor,
-        likeCount: 0,
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-      });
-      setNewQuote("");
-      setNewAuthor("");
-      setAddSuccess("Quote added successfully.");
-    } catch (error) {
-      setAddError(getErrorMessage(error));
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
   const currentQuote = quotes[currentQuoteIndex];
   const canManageQuote =
     Boolean(user) && Boolean(currentQuote?.createdBy) &&
@@ -170,7 +124,7 @@ export default function HomePage() {
           Find your next spark
         </h1>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-          Browse quotes, save the ones you love, and keep the momentum going.
+          Browse validated quotes from the community.
         </p>
       </div>
 
@@ -194,55 +148,20 @@ export default function HomePage() {
           onDelete={handleDeleteQuote}
         />
       ) : (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          No quotes yet. Be the first to add one!
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            No validated quotes yet. Check back soon!
+          </p>
+          {user ? (
+            <Link
+              to="/quotes/new"
+              className="mt-4 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white"
+            >
+              Submit the first quote
+            </Link>
+          ) : null}
+        </div>
       )}
-
-      <form
-        className="w-full rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
-        onSubmit={handleAddQuote}
-      >
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Quote
-            <textarea
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
-              rows={3}
-              value={newQuote}
-              onChange={(event) => setNewQuote(event.target.value)}
-            />
-          </label>
-        </div>
-        <div className="mt-4 flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Author
-            <input
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
-              value={newAuthor}
-              onChange={(event) => setNewAuthor(event.target.value)}
-            />
-          </label>
-        </div>
-        {addError ? (
-          <p className="mt-3 text-sm text-red-600" role="alert">
-            {addError}
-          </p>
-        ) : null}
-        {addSuccess ? (
-          <p className="mt-3 text-sm text-emerald-600" role="status">
-            {addSuccess}
-          </p>
-        ) : null}
-        <button
-          type="submit"
-          disabled={isAdding}
-          className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-        >
-          {isAdding ? "Adding..." : "Add quote"}
-        </button>
-      </form>
     </section>
   );
 }
-

@@ -4,6 +4,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import SettingsPage from "./pages/SettingsPage";
+import CreateQuotePage from "./pages/CreateQuotePage";
+import AdminPage from "./pages/AdminPage";
 import { useAuth } from "./context/AuthContext";
 import { db } from "./firebase";
 
@@ -30,7 +32,7 @@ const getInitialTheme = () => {
 function App() {
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
   const [themeReady, setThemeReady] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
@@ -116,6 +118,22 @@ function App() {
               Home
             </Link>
             {user ? (
+              <Link
+                to="/quotes/new"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                New Quote
+              </Link>
+            ) : null}
+            {userProfile?.isAdmin ? (
+              <Link
+                to="/admin"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                Admin
+              </Link>
+            ) : null}
+            {user ? (
               <>
                 <Link
                   to="/settings"
@@ -160,6 +178,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/quotes/new" element={<CreateQuotePage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </main>
     </div>
