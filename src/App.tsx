@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
+import SettingsPage from "./pages/SettingsPage";
+import CreateQuotePage from "./pages/CreateQuotePage";
+import AdminPage from "./pages/AdminPage";
+import { useAuth } from "./context/AuthContext";
+import { db } from "./firebase";
 
 const getInitialTheme = () => {
   if (typeof window === "undefined") {
@@ -25,6 +31,45 @@ const getInitialTheme = () => {
 
 function App() {
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
+  const [themeReady, setThemeReady] = useState(false);
+  const { user, userProfile, logout } = useAuth();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTheme = async () => {
+      if (!user) {
+        if (isMounted) {
+          setThemeReady(true);
+        }
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const snapshot = await getDoc(userRef);
+        if (snapshot.exists()) {
+          const data = snapshot.data() as { themePreference?: string };
+          if (data.themePreference === "dark") {
+            setIsDark(true);
+          } else if (data.themePreference === "light") {
+            setIsDark(false);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setThemeReady(true);
+        }
+      }
+    };
+
+    setThemeReady(false);
+    void loadTheme();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -34,10 +79,25 @@ function App() {
       root.classList.remove("dark");
     }
     window.localStorage.setItem("theme", isDark ? "dark" : "light");
-  }, [isDark]);
+
+    if (themeReady && user) {
+      void setDoc(
+        doc(db, "users", user.uid),
+        {
+          email: user.email ?? "",
+          themePreference: isDark ? "dark" : "light",
+        },
+        { merge: true }
+      );
+    }
+  }, [isDark, themeReady, user]);
 
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -57,12 +117,51 @@ function App() {
             >
               Home
             </Link>
-            <Link
-              to="/auth"
-              className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
-            >
-              Login / Sign Up
-            </Link>
+            {user ? (
+              <Link
+                to="/quotes/new"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                New Quote
+              </Link>
+            ) : null}
+            {userProfile?.isAdmin ? (
+              <Link
+                to="/admin"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                Admin
+              </Link>
+            ) : null}
+            {user ? (
+              <>
+                <Link
+                  to="/settings"
+                  className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+                >
+                  Settings
+                </Link>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Signed in as {user.email}
+                </span>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                Login / Sign Up
+              </Link>
+            )}
+            {user ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-600 transition hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white"
+              >
+                Logout
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={toggleTheme}
@@ -78,6 +177,9 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/quotes/new" element={<CreateQuotePage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </main>
     </div>

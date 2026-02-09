@@ -1,8 +1,50 @@
+import { useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Something went wrong. Please try again.";
+};
 
 export default function AuthPage() {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const { register, login } = useAuth();
+  const navigate = useNavigate();
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [signupError, setSignupError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState("");
+
+  const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoginError("");
+    setLoginSuccess("");
+    try {
+      await login(loginEmail, loginPassword);
+      setLoginSuccess("Logged in successfully.");
+      navigate("/", { replace: true });
+    } catch (error) {
+      setLoginError(getErrorMessage(error));
+    }
+  };
+
+  const handleSignupSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSignupError("");
+    setSignupSuccess("");
+    try {
+      await register(signupEmail, signupPassword);
+      setSignupSuccess("Account created successfully.");
+    } catch (error) {
+      setSignupError(getErrorMessage(error));
+    }
   };
 
   return (
@@ -18,7 +60,7 @@ export default function AuthPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <form
           className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
-          onSubmit={handleSubmit}
+          onSubmit={handleLoginSubmit}
         >
           <div>
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -41,6 +83,8 @@ export default function AuthPage() {
               type="email"
               autoComplete="email"
               required
+              value={loginEmail}
+              onChange={(event) => setLoginEmail(event.target.value)}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
               placeholder="you@example.com"
             />
@@ -58,10 +102,22 @@ export default function AuthPage() {
               type="password"
               autoComplete="current-password"
               required
+              value={loginPassword}
+              onChange={(event) => setLoginPassword(event.target.value)}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
               placeholder="********"
             />
           </div>
+          {loginError ? (
+            <p className="text-sm text-red-600" role="alert">
+              {loginError}
+            </p>
+          ) : null}
+          {loginSuccess ? (
+            <p className="text-sm text-emerald-600" role="status">
+              {loginSuccess}
+            </p>
+          ) : null}
           <button
             type="submit"
             className="mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
@@ -71,7 +127,7 @@ export default function AuthPage() {
         </form>
         <form
           className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
-          onSubmit={handleSubmit}
+          onSubmit={handleSignupSubmit}
         >
           <div>
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -94,6 +150,8 @@ export default function AuthPage() {
               type="email"
               autoComplete="email"
               required
+              value={signupEmail}
+              onChange={(event) => setSignupEmail(event.target.value)}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
               placeholder="you@example.com"
             />
@@ -111,10 +169,22 @@ export default function AuthPage() {
               type="password"
               autoComplete="new-password"
               required
+              value={signupPassword}
+              onChange={(event) => setSignupPassword(event.target.value)}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:outline-slate-500"
               placeholder="Create a password"
             />
           </div>
+          {signupError ? (
+            <p className="text-sm text-red-600" role="alert">
+              {signupError}
+            </p>
+          ) : null}
+          {signupSuccess ? (
+            <p className="text-sm text-emerald-600" role="status">
+              {signupSuccess}
+            </p>
+          ) : null}
           <button
             type="submit"
             className="mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
@@ -126,3 +196,5 @@ export default function AuthPage() {
     </section>
   );
 }
+
+
