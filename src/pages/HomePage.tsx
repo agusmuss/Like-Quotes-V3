@@ -1,9 +1,9 @@
 import { useState } from "react";
 import QuoteCard from "../components/QuoteCard";
-import { quotes as initialQuotes } from "../quotes";
+import { quotes as initialQuotes, type Quote } from "../quotes";
 
 export default function HomePage() {
-  const [quotes, setQuotes] = useState(initialQuotes);
+  const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
   const handleNextQuote = () => {

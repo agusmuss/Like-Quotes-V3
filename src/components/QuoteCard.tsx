@@ -1,13 +1,21 @@
 import Card from "./Card";
 import { Title, align } from "./Title";
 
+type QuoteCardProps = {
+  quote: string;
+  author: string;
+  likeCount: number;
+  onLike: () => void;
+  onNext: () => void;
+};
+
 export default function QuoteCard({
   quote,
   author,
   likeCount,
   onLike,
   onNext,
-}) {
+}: QuoteCardProps) {
   return (
     <Card>
       <Title label={quote} align={align.center} />

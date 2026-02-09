@@ -1,5 +1,7 @@
+import type { FormEvent } from "react";
+
 export default function AuthPage() {
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
   };
 
@@ -124,4 +126,3 @@ export default function AuthPage() {
     </section>
   );
 }
-
