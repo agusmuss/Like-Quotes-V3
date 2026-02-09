@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const getErrorMessage = (error: unknown) => {
@@ -11,6 +12,7 @@ const getErrorMessage = (error: unknown) => {
 
 export default function AuthPage() {
   const { register, login } = useAuth();
+  const navigate = useNavigate();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -27,6 +29,7 @@ export default function AuthPage() {
     try {
       await login(loginEmail, loginPassword);
       setLoginSuccess("Logged in successfully.");
+      navigate("/", { replace: true });
     } catch (error) {
       setLoginError(getErrorMessage(error));
     }
@@ -193,3 +196,5 @@ export default function AuthPage() {
     </section>
   );
 }
+
+
