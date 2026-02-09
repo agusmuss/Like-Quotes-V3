@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
+import { useAuth } from "./context/AuthContext";
 
 const getInitialTheme = () => {
   if (typeof window === "undefined") {
@@ -25,6 +26,7 @@ const getInitialTheme = () => {
 
 function App() {
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -38,6 +40,10 @@ function App() {
 
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -57,12 +63,27 @@ function App() {
             >
               Home
             </Link>
-            <Link
-              to="/auth"
-              className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
-            >
-              Login / Sign Up
-            </Link>
+            {user ? (
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Signed in as {user.email}
+              </span>
+            ) : (
+              <Link
+                to="/auth"
+                className="text-slate-600 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:text-slate-300 dark:hover:text-white"
+              >
+                Login / Sign Up
+              </Link>
+            )}
+            {user ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-600 transition hover:border-slate-400 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white"
+              >
+                Logout
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={toggleTheme}
