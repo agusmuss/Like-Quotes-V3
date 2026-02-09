@@ -8,16 +8,22 @@ export function Title({ label, align }) {
   const alignText = () => {
     switch (align) {
       case "center":
-        return "title-center";
+        return "text-center";
       case "left":
-        return "title-left";
+        return "text-left";
       case "right":
-        return "title-right";
+        return "text-right";
       default:
         console.error("No suitable setting is found for", align);
-        return "title-center";
+        return "text-center";
     }
   };
 
-  return <h2 className={`title ${alignText()}`}>{label}</h2>;
+  return (
+    <h2
+      className={`text-2xl font-semibold leading-snug text-slate-900 dark:text-slate-100 ${alignText()}`}
+    >
+      {label}
+    </h2>
+  );
 }
